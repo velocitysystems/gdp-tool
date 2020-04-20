@@ -1,6 +1,7 @@
 ﻿namespace GdpTool
 {
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
     using Serilog;
     using static GdpTool.Program;
@@ -81,12 +82,33 @@
                         var json = $"{{ role: {permission.Role}, type: {permission.Type}, displayName: {permission.DisplayName} }}";
                         _logger.Information(json);
                     }
+
+                    // If user has requested to save changes, we go ahead and commit the adjusted permissions.
+                    if ( _options.SaveChanges)
+                    {
+                        switch (_options.Permission)
+                        {
+                            case "owner":
+                                var nonOwnerPermissions = file.Permissions.Where(q => q.Role != "owner");
+                                foreach (var permission in nonOwnerPermissions)
+                                {
+                                    var deleted = await _service.DeletePermissionAsync(file.Id, permission.Id);
+                                    var json = $"{{ role: {permission.Role}, type: {permission.Type}, displayName: {permission.DisplayName} }}";
+                                    var status = deleted ? "Deleted" : "Failed to Delete";
+                                    _logger.Information($"{status}: {json}");
+                                }
+                                break;
+
+                            default:
+                                throw new NotSupportedException("Permission type is not yet supported.");
+                        }
+                    }
                 }
 
                 count += files.Count;
             }
 
-            _logger.Information($"Finished! Found ({count}) results in total.");
+            _logger.Information($"Finished! Found {count} results in total.");
         }
 
         #endregion

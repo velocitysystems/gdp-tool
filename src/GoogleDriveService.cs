@@ -113,6 +113,26 @@
             }
         }
 
+        /// <summary>
+        /// Asynchronously delete the permission.
+        /// </summary>
+        /// <param name="fileId">The file identifier.</param>
+        /// <param name="permissionId">The permission identifier.</param>
+        /// <returns>True if the permission was deleted, else false.</returns>
+        public async Task<bool> DeletePermissionAsync(string fileId, string permissionId)
+        {
+            try
+            {
+                var deleteRequest = _service.Permissions.Delete(fileId, permissionId);
+                await deleteRequest.ExecuteAsync();
+                return true;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
         #endregion
 
         #region Private Static Methods
@@ -131,7 +151,7 @@
             string credPath = "token.json";
             var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                 GoogleClientSecrets.Load(stream).Secrets,
-                new[] { DriveService.Scope.DriveReadonly },
+                new[] { DriveService.Scope.Drive },
                 "user",
                 CancellationToken.None,
                 new FileDataStore(credPath, true));
