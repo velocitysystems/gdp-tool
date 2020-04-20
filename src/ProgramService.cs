@@ -46,22 +46,47 @@
                 try
                 {
                     _service = await GoogleDriveService.CreateAsync(_options.CredentialsPath);
-                    _logger.Information("Started the Google Drive service.");
+                    _logger.Information("Started the service.");
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error(ex, "Failed to start the Google Drive service.");
+                    _logger.Error(ex, "Failed to start the service.");
                 }
             }
 
             // Asynchronously search the drive(s) and page the results.
-            await foreach(var files in _service.GetFilesAsync(pageSize: 5))
+            var count = 0;
+            await foreach(var files in _service.GetFilesAsync(query: "'me' in owners", pageSize: 5))
             {
+                _logger.Information($"Found results {count + 1} to {count + files.Count}.");
                 foreach (var file in files)
                 {
-                    _logger.Information(file.Name);
+                    // Determine if is a file or folder.
+                    var isFolder = file.MimeType == GoogleDriveService.FolderMimeType;
+                    switch (isFolder)
+                    {
+                        case true:
+                            _logger.Information($"\"{file.Name}\" (Folder)");
+                            break;
+
+                        case false:
+                            _logger.Information($"\"{file.Name}\" ({file.MimeType})");
+                            break;
+                    }
+
+                    // Determine the permissions.
+                    _logger.Information("Permissions:");
+                    foreach (var permission in file.Permissions)
+                    {
+                        var json = $"{{ role: {permission.Role}, type: {permission.Type}, displayName: {permission.DisplayName} }}";
+                        _logger.Information(json);
+                    }
                 }
+
+                count += files.Count;
             }
+
+            _logger.Information($"Finished! Found ({count}) results in total.");
         }
 
         #endregion

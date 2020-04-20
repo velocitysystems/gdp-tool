@@ -16,6 +16,16 @@
     /// </summary>
     public class GoogleDriveService
     {
+        #region Constants
+
+        /// <summary>
+        /// The MIME type representing a folder as returned by the API.
+        /// </summary>
+        public const string FolderMimeType = "application/vnd.google-apps.folder";
+
+        #endregion
+
+
         #region Fields
 
         private readonly DriveService _service;
@@ -63,13 +73,15 @@
         /// and <a href="https://developers.google.com/drive/api/v3/about-files">Files and folders overview</a>.
         /// </para>
         /// </summary>
-        /// <param name="fields">The request fields.</param>
+        /// <param name="query">Optional query parameters.</param>
+        /// <param name="fields">Optional fields to include.</param>
         /// <param name="spaces">Optional spaces identifier i.e. drive, appDataFolder, photos.</param>
         /// <param name="corpora">Optional scope identifier i.e. user, domain, drive, allDrives.</param>
         /// <param name="pageSize">Optional page size.</param>
         /// <returns>An <see cref="IAsyncEnumerable{T}" /> where each iterator returns a page of files/folders.</returns>
         public async IAsyncEnumerable<IReadOnlyList<Google.Apis.Drive.v3.Data.File>> GetFilesAsync(
-            string fields = "nextPageToken, files(id, name, permissions)", 
+            string query = null,
+            string fields = "nextPageToken, files(id, name, mimeType, permissions)", 
             string spaces = "drive", 
             string corpora = "user", 
             int pageSize = 100)
@@ -88,6 +100,7 @@
                 }
 
                 var listRequest = _service.Files.List();
+                listRequest.Q = query;
                 listRequest.Fields = fields;
                 listRequest.Spaces = spaces;
                 listRequest.Corpora = corpora;
@@ -95,7 +108,7 @@
                 listRequest.PageToken = result?.NextPageToken;                
 
                 result = await listRequest.ExecuteAsync();
-                var files = result.Files;
+                var files = result.Files.OrderByDescending(q => q.MimeType == FolderMimeType).ThenBy(q => q.Name);
                 yield return files.ToList();
             }
         }
