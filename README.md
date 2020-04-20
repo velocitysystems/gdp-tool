@@ -12,14 +12,12 @@ A .NET Core console application to scan and modify file/folder permissions in Go
 - Unix, macOS
 
 **Usage**
-|Flag|Description|
+|Flag|Description|Required|
 |---|---|
-|`-c "credentials.json"`|The path to the "credentials.json" file|
-|`-t "/path/to/the/resource"`|The path to the target resource i.e. file/folder|
-|`-p [Permission]`|The permission to apply to each resource found in the scan|
-|`-a`|Run the tool in 'audit-only' mode and debug changes to log file^|
-
-^ When run in 'audit-only' mode, no changes are made but a simulated run occurs only.
+|`-c "credentials.json"`|The path to the "credentials.json" file|True|
+|`-p [Permission]`|The permission to apply to each resource found in the scan|True|
+|`-f "/path/to/the/folder"`|The path to the target folder, or blank for 'My Drive'|False|
+|`-s`|If specified, the tool will save changes otherwise will only write to the log file.|False|
 
 **Permissions**
 |Permission|Description|
