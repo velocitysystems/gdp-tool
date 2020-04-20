@@ -1,5 +1,6 @@
 ﻿namespace GdpTool
 {
+    using System;
     using System.Threading.Tasks;
     using CommandLine;
     using Serilog;
@@ -45,7 +46,14 @@
                 .WriteTo.File("audit.log", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
-            await new ProgramService(options, logger).RunAsync();
+            try
+            {
+                await new ProgramService(options, logger).RunAsync();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Unhandled exception");
+            }            
         }
     }
 }

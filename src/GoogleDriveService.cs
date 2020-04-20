@@ -1,5 +1,6 @@
 ﻿namespace GdpTool
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -56,19 +57,47 @@
         #region Public Methods
 
         /// <summary>
-        /// Asynchronously get files/folders using the V3 drive API.
+        /// Asynchronously get files/folders using the V3 Drive API.
+        /// <para>
+        /// See <a href="https://developers.google.com/drive/api/v3/search-files">Search for files and folders</a>
+        /// and <a href="https://developers.google.com/drive/api/v3/about-files">Files and folders overview</a>.
+        /// </para>
         /// </summary>
         /// <param name="fields">The request fields.</param>
+        /// <param name="spaces">Optional spaces identifier i.e. drive, appDataFolder, photos.</param>
+        /// <param name="corpora">Optional scope identifier i.e. user, domain, drive, allDrives.</param>
         /// <param name="pageSize">Optional page size.</param>
-        /// <returns>A <see cref="IReadOnlyList<Google.Apis.Drive.v3.Data.File}" />.</returns>
-        public async Task<IReadOnlyList<Google.Apis.Drive.v3.Data.File>> GetFilesAsync(string fields, int pageSize = 10)
+        /// <returns>An <see cref="IAsyncEnumerable{T}" /> where each iterator returns a page of files/folders.</returns>
+        public async IAsyncEnumerable<IReadOnlyList<Google.Apis.Drive.v3.Data.File>> GetFilesAsync(
+            string fields = "nextPageToken, files(id, name, permissions)", 
+            string spaces = "drive", 
+            string corpora = "user", 
+            int pageSize = 100)
         {
-            var listRequest = _service.Files.List();
-            listRequest.Fields = fields;
-            listRequest.PageSize = pageSize;
+            if (!fields.Contains("nextPageToken"))
+            {
+                throw new ArgumentException("Must contain the 'nextPageToken' descriptor.", nameof(fields));
+            }
 
-            var files = (await listRequest.ExecuteAsync())?.Files.ToList();
-            return files;
+            Google.Apis.Drive.v3.Data.FileList result = null;
+            while (true)
+            {
+                if (result != null && string.IsNullOrWhiteSpace(result.NextPageToken))
+                {
+                    yield break;
+                }
+
+                var listRequest = _service.Files.List();
+                listRequest.Fields = fields;
+                listRequest.Spaces = spaces;
+                listRequest.Corpora = corpora;
+                listRequest.PageSize = pageSize;
+                listRequest.PageToken = result?.NextPageToken;                
+
+                result = await listRequest.ExecuteAsync();
+                var files = result.Files;
+                yield return files.ToList();
+            }
         }
 
         #endregion

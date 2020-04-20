@@ -54,7 +54,14 @@
                 }
             }
 
-            var files = await _service.GetFilesAsync("nextPageToken, files(id, name)");
+            // Asynchronously search the drive(s) and page the results.
+            await foreach(var files in _service.GetFilesAsync(pageSize: 5))
+            {
+                foreach (var file in files)
+                {
+                    _logger.Information(file.Name);
+                }
+            }
         }
 
         #endregion
