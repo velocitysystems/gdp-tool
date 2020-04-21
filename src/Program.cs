@@ -57,7 +57,6 @@
                 try
                 {
                     _service = await GoogleDriveService.CreateAsync(_options.CredentialsPath);
-                    _logger.Information("Started the service.");
                 }
                 catch (Exception ex)
                 {
@@ -65,40 +64,17 @@
                 }
             }
 
-            // Scan for file(s)/folder(s) with non-owner permissions.
-            var results = await ScanForNonOwnerPermissionsAsync();
-            if (_options.RemoveNonOwnerPermissions && !results.Any())
-            {
-                _logger.Warning($"Remove flag specified, but no matching result(s) found.");
-                return;
-            }
-            else if (!_options.RemoveNonOwnerPermissions)
-            {
-                _logger.Warning($"Remove flag not specified..");
-                return;
-            }
-
-            // Remove non-owner permissions from results.
-            await RemoveNonOwnerPermissionsAsync(results);
-        }
-
-        #endregion
-
-        #region Private Methods
-
-        /// <summary>
-        /// Asynchronously scan the drive(s) for non-owner permissions.
-        /// </summary>
-        /// <returns>A dictionary of files and the non-owner permissions found.</returns>
-        private async Task<Dictionary<File, IReadOnlyList<Permission>>> ScanForNonOwnerPermissionsAsync()
-        {
             _logger.Information("Starting scan.");
 
-            var count = 0;
-            var resultsWithNonOwnerPermissions = new Dictionary<File, IReadOnlyList<Permission>>();
+            var resultsCount = 0;
+            var matchesCount = 0;
+
+            /// Asynchronously scan the drive(s) for non-owner permissions.
             await foreach (var results in _service.GetFilesAsync(query: "'me' in owners"))
             {
-                _logger.Information("Found result(s) {start} to {end}.", count + 1, count + results.Count);
+                _logger.Information("Found result(s) {start} to {end}.", resultsCount + 1, resultsCount + results.Count);
+
+                var matches = new Dictionary<File, IReadOnlyList<Permission>>();
                 foreach (var result in results)
                 {
                     LogFileInformation(result);
@@ -111,28 +87,48 @@
                     if (nonOwnerPermissions.Any())
                     {
                         _logger.Information("Found {count} non-owner permissions.", nonOwnerPermissions.Count());
-                        resultsWithNonOwnerPermissions.Add(result, nonOwnerPermissions.ToList());
+                        matches.Add(result, nonOwnerPermissions.ToList());
                     }
                 }
 
-                count += results.Count;
+                // Remove permissions if matches found and remove flag is specified.
+                if (matches.Any() && _options.RemoveNonOwnerPermissions)
+                {
+                    await RemoveNonOwnerPermissionsAsync(matches);
+                }
+
+                matchesCount += matches.Count;
+                resultsCount += results.Count;
             }
 
-            _logger.Information("Finished scan! Found {totalCount} result(s) and {matchingCount} result(s) with non-owner permissions.", count, resultsWithNonOwnerPermissions.Count);
-            return resultsWithNonOwnerPermissions;
+            if (_options.RemoveNonOwnerPermissions && matchesCount == 0)
+            {
+                _logger.Warning($"Remove flag specified, but no matching result(s) found.");
+            }
+            else if (!_options.RemoveNonOwnerPermissions)
+            {
+                _logger.Warning($"Remove flag not specified..");
+                return;
+            }
+
+            _logger.Information("Finished scan! Found {resultsCount} result(s) and {matchesCount} result(s) with non-owner permissions.", resultsCount, matchesCount);
         }
 
+        #endregion
+
+        #region Private Methods
+
         /// <summary>
-        /// Asynchronously remove non-owner permissiosn from the specified results.
+        /// Asynchronously remove non-owner permissiosn from the specified matches.
         /// </summary>
-        /// <param name="results">The results with non-owner permissions.</param>
+        /// <param name="matches">The matches with non-owner permissions.</param>
         /// <returns>A task.</returns>
-        private async Task RemoveNonOwnerPermissionsAsync(Dictionary<File, IReadOnlyList<Permission>> results)
+        private async Task RemoveNonOwnerPermissionsAsync(Dictionary<File, IReadOnlyList<Permission>> matches)
         {
-            _logger.Information("Removing permissions on {count} result(s).", results.Count);
+            _logger.Information("Removing permissions on {count} result(s).", matches.Count);
 
             var count = 0;
-            foreach (var result in results)
+            foreach (var result in matches)
             {
                 var file = result.Key;
                 var nonOwnerPermissions = result.Value;
