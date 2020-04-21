@@ -167,7 +167,7 @@
                 }
             }
 
-            _logger.Information("Finished! Removed {count} permissions.", count);
+            _logger.Information("Finished! Removed {count} permission(s).", count);
         }
 
         /// <summary>
