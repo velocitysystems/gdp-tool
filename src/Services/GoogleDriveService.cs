@@ -1,4 +1,4 @@
-﻿namespace GdpTool
+﻿namespace GdpTool.Services
 {
     using System;
     using System.Collections.Generic;

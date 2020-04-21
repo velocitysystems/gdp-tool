@@ -1,4 +1,4 @@
-﻿namespace GdpTool
+﻿namespace GdpTool.Models
 {
     /// <summary>
     /// Defines enumerations used by the tool.
