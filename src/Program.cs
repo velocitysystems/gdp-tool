@@ -111,7 +111,7 @@
                 return;
             }
 
-            _logger.Information("Finished scan! Found {resultsCount} result(s) and {matchesCount} result(s) with non-owner permissions.", resultsCount, matchesCount);
+            _logger.Information("Finished! Found {resultsCount} result(s) and {matchesCount} result(s) with non-owner permissions.", resultsCount, matchesCount);
         }
 
         #endregion
