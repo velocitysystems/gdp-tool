@@ -67,15 +67,16 @@
 
             _logger.Information("Starting scan.");
 
-            var resultsCount = 0;
+            var count = 0;
             var matchesCount = 0;
 
             // Asynchronously scan the drive(s) for files/folders with non-owner permissions.
-            await foreach (var results in _service.GetFilesAsync(query: "visibility != 'limited'"))
+            // Essentially this says: 'Give me all the files/folders I own, but which also have non-owner permissions'.
+            await foreach (var results in _service.GetFilesAsync(query: "'me' in owners and visibility != 'limited'"))
             {
                 if (results.Count > 0)
                 {
-                    _logger.Information("Found result(s) {start} to {end}.", resultsCount + 1, resultsCount + results.Count);
+                    _logger.Information("Found result(s) {start} to {end}.", count + 1, count + results.Count);
                 }
 
                 var matches = new Dictionary<File, IReadOnlyList<Permission>>();
@@ -101,8 +102,8 @@
                     await RemoveNonOwnerPermissionsAsync(matches);
                 }
 
-                matchesCount += matches.Count;
-                resultsCount += results.Count;
+                count += results.Count;
+                matchesCount += matches.Count;                
             }
 
             if (_options.RemoveNonOwnerPermissions && matchesCount == 0)
@@ -114,7 +115,7 @@
                 _logger.Warning($"Remove flag not specified.");
             }
 
-            _logger.Information("Finished! Found {resultsCount} result(s) and {matchesCount} result(s) with non-owner permissions.", resultsCount, matchesCount);
+            _logger.Information("Finished! Found {matchesCount} result(s) with non-owner permissions.", matchesCount);
         }
 
         #endregion

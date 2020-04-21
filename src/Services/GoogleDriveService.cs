@@ -95,8 +95,9 @@
                 listRequest.Fields = fields;
                 listRequest.Spaces = spaces;
                 listRequest.Corpora = corpora;
+                listRequest.IncludeItemsFromAllDrives = false;  // After June 1, 2020, parameter will be ignored and shared drive items will be returned in the results.
                 listRequest.PageSize = pageSize;
-                listRequest.PageToken = result?.NextPageToken;                
+                listRequest.PageToken = result?.NextPageToken;
 
                 result = await listRequest.ExecuteAsync();
 
