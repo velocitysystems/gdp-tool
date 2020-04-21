@@ -61,6 +61,7 @@
                 catch (Exception ex)
                 {
                     _logger.Error(ex, "Failed to start the service.");
+                    return;
                 }
             }
 
@@ -69,10 +70,13 @@
             var resultsCount = 0;
             var matchesCount = 0;
 
-            // Asynchronously scan the drive(s) for non-owner permissions.
-            await foreach (var results in _service.GetFilesAsync(query: "'me' in owners"))
+            // Asynchronously scan the drive(s) for files/folders with non-owner permissions.
+            await foreach (var results in _service.GetFilesAsync(query: "visibility != 'limited'"))
             {
-                _logger.Information("Found result(s) {start} to {end}.", resultsCount + 1, resultsCount + results.Count);
+                if (results.Count > 0)
+                {
+                    _logger.Information("Found result(s) {start} to {end}.", resultsCount + 1, resultsCount + results.Count);
+                }
 
                 var matches = new Dictionary<File, IReadOnlyList<Permission>>();
                 foreach (var result in results)
