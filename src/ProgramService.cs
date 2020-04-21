@@ -84,10 +84,10 @@
         /// <returns>A dictionary of files and the non-owner permissions found.</returns>
         private async Task<Dictionary<File, IReadOnlyList<Permission>>> ScanForNonOwnerPermissionsAsync()
         {
-            var count = 0;
-            var resultsWithNonOwnerPermissions = new Dictionary<File, IReadOnlyList<Permission>>();
-
             _logger.Information("Starting scan.");
+
+            var count = 0;
+            var resultsWithNonOwnerPermissions = new Dictionary<File, IReadOnlyList<Permission>>();            
             await foreach (var results in _service.GetFilesAsync(query: "'me' in owners"))
             {
                 _logger.Information("Found results {start} to {end}.", count + 1, count + results.Count);
@@ -110,7 +110,7 @@
                 count += results.Count;
             }
 
-            _logger.Information("Finished scan! Found {totalCount} results and {matchingCount} results with non-owner permissions.", count, resultsWithNonOwnerPermissions.Count);
+            _logger.Information("Finished! Found {totalCount} results and {matchingCount} results with non-owner permissions.", count, resultsWithNonOwnerPermissions.Count);
             return resultsWithNonOwnerPermissions;
         }
 
@@ -121,8 +121,9 @@
         /// <returns>A task.</returns>
         private async Task RemoveNonOwnerPermissionsAsync(Dictionary<File, IReadOnlyList<Permission>> results)
         {
-            _logger.Information($"Removing permissions on {results.Count} results.");
+            _logger.Information("Removing permissions on {count} results.", results.Count);
 
+            var count = 0;
             foreach (var result in results)
             {
                 var file = result.Key;
@@ -132,45 +133,41 @@
                 foreach (var permission in nonOwnerPermissions)
                 {
                     _logger.Information("{@permission}", new { permission.Role, permission.Type, permission.DisplayName });
-                    try
-                    {
-                        // Get permisison object from the API to ensure: (1) it exists, (2) it is unchanged since the scan.
-                        var obj = await _service.GetPermissionAsync(file.Id, permission.Id);
-                        if (!(obj is Permission current))
-                        {
-                            _logger.Warning("Permission no longer exists. Skipping.");
-                            continue;
-                        }
 
-                        // Verify the permission against the retrieved object.
-                        if (!(obj.Role == permission.Role 
-                            && obj.Type == permission.Type 
-                            && obj.DisplayName == permission.DisplayName
-                            && obj.ExpirationTime == permission.ExpirationTime))
-                        {
-                            _logger.Warning("Permission has changed since the scan. Skipping.");
-                            continue;
-                        }
-                    }
-                    catch (Exception ex)
+                    // Get the object from the API to ensure: (1) it exists, (2) it is unchanged since the scan.
+                    var obj = await _service.GetPermissionAsync(file.Id, permission.Id);
+                    if (obj is null)
                     {
-                        _logger.Error(ex, "Failed to get permission.");
+                        _logger.Warning("Permission no longer exists. Skipping.");
                         continue;
                     }
 
-                    try
+                    // Verify the cached permission against the object.
+                    if (!(obj.Role == permission.Role
+                        && obj.Type == permission.Type
+                        && obj.DisplayName == permission.DisplayName
+                        && obj.ExpirationTime == permission.ExpirationTime))
                     {
-                        // The permission exists and is unchanged, so we can remove it!
-                        await _service.DeletePermissionAsync(file.Id, permission.Id);
-                        _logger.Information("Removed permission {id}", permission.Id);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.Error(ex, "Failed to remove permission.");
+                        _logger.Warning("Permission has changed since the scan. Skipping.");
                         continue;
-                    }                 
+                    }
+
+                    // Permission exists and is unchanged, so we can remove it.
+                    var deleted = await _service.DeletePermissionAsync(file.Id, permission.Id);
+                    if (deleted)
+                    {
+                        count++;
+                        _logger.Information("Removed permission {id}.", permission.Id);
+                    }
+                    else
+                    {
+                        _logger.Error("Failed to remove permission {id}.", permission.Id);
+                        _logger.Information("The position may no longer exist, or was removed when its parent permission was deleted i.e. on a folder.");
+                    }               
                 }
             }
+
+            _logger.Information("Finished! Removed {permissionsCount} permissions on {resultsCount} results with non-owner permissions.", count, results.Count);
         }
 
         /// <summary>

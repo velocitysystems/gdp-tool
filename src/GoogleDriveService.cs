@@ -125,11 +125,18 @@
             string permissionId, 
             string fields = "id, role, type, displayName, expirationTime")
         {
-            var getRequest = _service.Permissions.Get(fileId, permissionId);
-            getRequest.Fields = fields;
+            try
+            {
+                var getRequest = _service.Permissions.Get(fileId, permissionId);
+                getRequest.Fields = fields;
 
-            var permission = await getRequest.ExecuteAsync();
-            return permission;
+                var permission = await getRequest.ExecuteAsync();
+                return permission;
+            }
+            catch
+            {
+                return default;
+            }
         }
 
         /// <summary>
@@ -137,11 +144,19 @@
         /// </summary>
         /// <param name="fileId">The file identifier.</param>
         /// <param name="permissionId">The permission identifier.</param>
-        /// <returns>A task.</returns>
-        public async Task DeletePermissionAsync(string fileId, string permissionId)
+        /// <returns>True if the permisison was deleted, else false.</returns>
+        public async Task<bool> DeletePermissionAsync(string fileId, string permissionId)
         {
-            var deleteRequest = _service.Permissions.Delete(fileId, permissionId);
-            await deleteRequest.ExecuteAsync();
+            try
+            {
+                var deleteRequest = _service.Permissions.Delete(fileId, permissionId);
+                await deleteRequest.ExecuteAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         #endregion
