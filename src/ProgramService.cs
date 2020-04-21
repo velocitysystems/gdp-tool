@@ -66,7 +66,7 @@
             }
             else if (!_options.RemoveNonOwnerPermissions)
             {
-                _logger.Warning($"Remove flag not specified, finishing.");
+                _logger.Warning($"Remove flag not specified..");
                 return;
             }
 
@@ -110,7 +110,7 @@
                 count += results.Count;
             }
 
-            _logger.Information("Finished! Found {totalCount} result(s) and {matchingCount} result(s) with non-owner permissions.", count, resultsWithNonOwnerPermissions.Count);
+            _logger.Information("Finished scan! Found {totalCount} result(s) and {matchingCount} result(s) with non-owner permissions.", count, resultsWithNonOwnerPermissions.Count);
             return resultsWithNonOwnerPermissions;
         }
 
@@ -123,9 +123,7 @@
         {
             _logger.Information("Removing permissions on {count} result(s).", results.Count);
 
-            var permissionsCount = 0;
-            var resultsCount = 0;
-
+            var count = 0;
             foreach (var result in results)
             {
                 var file = result.Key;
@@ -158,23 +156,18 @@
                     var deleted = await _service.DeletePermissionAsync(file.Id, permission.Id);
                     if (deleted)
                     {
-                        permissionsCount++;
+                        count++;
                         _logger.Information("Removed permission {id}.", permission.Id);
                     }
                     else
                     {
                         _logger.Error("Failed to remove permission {id}.", permission.Id);
-                        _logger.Information("The position may no longer exist, or was removed when its parent permission was deleted i.e. on a folder.");
+                        _logger.Information("The permission no longer exists, or was removed when its parent permission was deleted.");
                     }               
-                }
-
-                if (permissionsCount > 0)
-                {
-                    resultsCount++;
                 }
             }
 
-            _logger.Information("Finished! Removed {permissionsCount} permissions on {resultsCount} result(s) with non-owner permissions.", permissionsCount, resultsCount);
+            _logger.Information("Finished! Removed {count} permissions.", count);
         }
 
         /// <summary>
