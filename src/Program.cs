@@ -111,9 +111,6 @@
             }
 
             _logger.Information("Finished! Found {resultsCount} result(s) and {matchesCount} result(s) with non-owner permissions.", resultsCount, matchesCount);
-
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
         }
 
         #endregion
