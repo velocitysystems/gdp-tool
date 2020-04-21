@@ -107,8 +107,7 @@
             }
             else if (!_options.RemoveNonOwnerPermissions)
             {
-                _logger.Warning($"Remove flag not specified..");
-                return;
+                _logger.Warning($"Remove flag not specified.");
             }
 
             _logger.Information("Finished! Found {resultsCount} result(s) and {matchesCount} result(s) with non-owner permissions.", resultsCount, matchesCount);
