@@ -86,7 +86,7 @@
                     var nonOwnerPermissions = result.Permissions.Where(q => q.Role != Enums.Permission.Role.Owner);
                     if (nonOwnerPermissions.Any())
                     {
-                        _logger.Information("Found {count} non-owner permissions.", nonOwnerPermissions.Count());
+                        _logger.Information("Found {count} non-owner permission(s).", nonOwnerPermissions.Count());
                         matches.Add(result, nonOwnerPermissions.ToList());
                     }
                 }
@@ -124,7 +124,7 @@
         /// <returns>A task.</returns>
         private async Task RemoveNonOwnerPermissionsAsync(Dictionary<File, IReadOnlyList<Permission>> matches)
         {
-            _logger.Information("Removing permissions on {count} result(s).", matches.Count);
+            _logger.Information("Removing {count} permission(s).", matches.Count);
 
             var count = 0;
             foreach (var result in matches)
