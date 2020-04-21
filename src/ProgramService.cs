@@ -61,7 +61,7 @@
             var results = await ScanForNonOwnerPermissionsAsync();
             if (_options.RemoveNonOwnerPermissions && !results.Any())
             {
-                _logger.Warning($"Remove flag specified, but no matching results found.");
+                _logger.Warning($"Remove flag specified, but no matching result(s) found.");
                 return;
             }
             else if (!_options.RemoveNonOwnerPermissions)
@@ -90,7 +90,7 @@
             var resultsWithNonOwnerPermissions = new Dictionary<File, IReadOnlyList<Permission>>();            
             await foreach (var results in _service.GetFilesAsync(query: "'me' in owners"))
             {
-                _logger.Information("Found results {start} to {end}.", count + 1, count + results.Count);
+                _logger.Information("Found result(s) {start} to {end}.", count + 1, count + results.Count);
                 foreach (var result in results)
                 {
                     LogFileInformation(result);
@@ -110,7 +110,7 @@
                 count += results.Count;
             }
 
-            _logger.Information("Finished! Found {totalCount} results and {matchingCount} results with non-owner permissions.", count, resultsWithNonOwnerPermissions.Count);
+            _logger.Information("Finished! Found {totalCount} result(s) and {matchingCount} result(s) with non-owner permissions.", count, resultsWithNonOwnerPermissions.Count);
             return resultsWithNonOwnerPermissions;
         }
 
@@ -121,9 +121,11 @@
         /// <returns>A task.</returns>
         private async Task RemoveNonOwnerPermissionsAsync(Dictionary<File, IReadOnlyList<Permission>> results)
         {
-            _logger.Information("Removing permissions on {count} results.", results.Count);
+            _logger.Information("Removing permissions on {count} result(s).", results.Count);
 
-            var count = 0;
+            var permissionsCount = 0;
+            var resultsCount = 0;
+
             foreach (var result in results)
             {
                 var file = result.Key;
@@ -156,7 +158,7 @@
                     var deleted = await _service.DeletePermissionAsync(file.Id, permission.Id);
                     if (deleted)
                     {
-                        count++;
+                        permissionsCount++;
                         _logger.Information("Removed permission {id}.", permission.Id);
                     }
                     else
@@ -165,9 +167,14 @@
                         _logger.Information("The position may no longer exist, or was removed when its parent permission was deleted i.e. on a folder.");
                     }               
                 }
+
+                if (permissionsCount > 0)
+                {
+                    resultsCount++;
+                }
             }
 
-            _logger.Information("Finished! Removed {permissionsCount} permissions on {resultsCount} results with non-owner permissions.", count, results.Count);
+            _logger.Information("Finished! Removed {permissionsCount} permissions on {resultsCount} result(s) with non-owner permissions.", permissionsCount, resultsCount);
         }
 
         /// <summary>
