@@ -6,6 +6,23 @@
     public static class Enums
     {
         /// <summary>
+        /// Enums for <see cref="Google.Apis.Drive.v3.Data.File"/ ></see>.
+        /// </summary>
+        public struct File
+        {
+            /// <summary>
+            /// Enums for file MIME type.
+            /// </summary>
+            public struct MimeType
+            {
+                /// <summary>
+                /// Folder MIME type.
+                /// </summary>
+                public const string Folder = "application/vnd.google-apps.folder";
+            }
+        }
+
+        /// <summary>
         /// Enums for <see cref="Google.Apis.Drive.v3.Data.Permission" />.
         /// </summary>
         public struct Permission

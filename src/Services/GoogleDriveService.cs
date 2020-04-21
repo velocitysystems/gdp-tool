@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using GdpTool.Models;
     using Google.Apis.Auth.OAuth2;
     using Google.Apis.Drive.v3;
     using Google.Apis.Drive.v3.Data;
@@ -16,16 +17,6 @@
     /// </summary>
     public class GoogleDriveService
     {
-        #region Constants
-
-        /// <summary>
-        /// The MIME type representing a folder as returned by the API.
-        /// </summary>
-        public const string FolderMimeType = "application/vnd.google-apps.folder";
-
-        #endregion
-
-
         #region Fields
 
         private readonly DriveService _service;
@@ -108,7 +99,9 @@
                 listRequest.PageToken = result?.NextPageToken;                
 
                 result = await listRequest.ExecuteAsync();
-                var files = result.Files.OrderByDescending(q => q.MimeType == FolderMimeType).ThenBy(q => q.Name);
+
+                // Order files descending by folder MIME type and then by name.
+                var files = result.Files.OrderByDescending(q => q.MimeType == Enums.File.MimeType.Folder).ThenBy(q => q.Name);
                 yield return files.ToList();
             }
         }

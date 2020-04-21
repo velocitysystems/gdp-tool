@@ -69,7 +69,7 @@
             var resultsCount = 0;
             var matchesCount = 0;
 
-            /// Asynchronously scan the drive(s) for non-owner permissions.
+            // Asynchronously scan the drive(s) for non-owner permissions.
             await foreach (var results in _service.GetFilesAsync(query: "'me' in owners"))
             {
                 _logger.Information("Found result(s) {start} to {end}.", resultsCount + 1, resultsCount + results.Count);
@@ -111,6 +111,9 @@
             }
 
             _logger.Information("Finished! Found {resultsCount} result(s) and {matchesCount} result(s) with non-owner permissions.", resultsCount, matchesCount);
+
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
         }
 
         #endregion
@@ -176,21 +179,12 @@
         /// <summary>
         /// Log file information to the logger.
         /// </summary>
-        /// <param name="file">The file or folder.</param>
+        /// <param name="file">The file.</param>
         private void LogFileInformation(File file)
         {
-            var isFolder = file.MimeType == GoogleDriveService.FolderMimeType;
-            switch (isFolder)
-            {
-                case true:
-                    _logger.Information("{name}", file.Name);
-                    break;
-
-                case false:
-                    _logger.Information("{name} [{mimeType}]", file.Name, file.MimeType);
-                    break;
-
-            }
+            // The API represents folders as a file with a unique MIME type.
+            var mimeType = file.MimeType == Enums.File.MimeType.Folder ? "Folder" : file.MimeType;
+            _logger.Information("{name} [{mimeType}]", file.Name, mimeType);
         }
 
         #endregion
