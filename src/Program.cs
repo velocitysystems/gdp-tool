@@ -20,14 +20,8 @@
             [Option('c', "credentials", Required = true, HelpText = "The path to the \"credentials.json\" file.")]
             public string CredentialsPath { get; set; }
 
-            [Option('p', "permission", Required = true, HelpText = "The permission to apply to each resource found in the scan.")]
-            public string Permission { get; set; }
-
-            [Option('f', "folder", Required = false, HelpText = "The path to the target folder, or blank for 'My Drive'.")]
-            public string FolderPath { get; set; }
-
-            [Option('s', "save", Required = false, HelpText = "If specified, the tool will save changes otherwise will only write to the log file.")]
-            public bool SaveChanges { get; set; }
+            [Option('r', "remove", Required = false, HelpText = "Remove non-owner permissions. This operation cannot be reversed.")]
+            public bool RemoveNonOwnerPermissions { get; set; }
         }
 
         /// <summary>

@@ -2,7 +2,7 @@
   "profiles": {
     "GdpTool": {
       "commandName": "Project",
-      "commandLineArgs": "-c \"C:\\Development\\Projects\\credentials.json\" -p owner -s"
+      "commandLineArgs": "-c \"C:\\Development\\Projects\\credentials.json\" -r"
     }
   }
 }

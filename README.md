@@ -1,10 +1,13 @@
 # gdp-tool
-A .NET Core console application to scan and modify file/folder permissions in Google Drive™.
+A .NET Core console application to audit file/folder permissions in Google Drive™.
 
 **Features**
-- Scan and modify Google Drive™ file/folder permissions
+- Audit file/folder permissions
+- Remove non-owner permissions^
 - Supports recursive scanning
-- Supports 'audit-only' mode with log file output
+- Supports read-only operation with report written to log
+
+*^Executed only when the `-r `flag is used.*
 
 **Supported Platforms**
 - Windows
@@ -12,21 +15,21 @@ A .NET Core console application to scan and modify file/folder permissions in Go
 - Unix, macOS
 
 **Usage**
+
 |Flag|Description|Required|
-|---|---|
+|---|---|---|
 |`-c "credentials.json"`|The path to the "credentials.json" file|True|
-|`-p [Permission]`|The permission to apply to each resource found in the scan|True|
-|`-f "/path/to/the/folder"`|The path to the target folder, or blank for 'My Drive'|False|
-|`-s`|If specified, the tool will save changes otherwise will only write to the log file.|False|
+|`-r`|Remove non-owner permissions. *This operation cannot be reversed*.|False|
 
-**Permissions**
-|Permission|Description|
-|---|---|
-|`owner`|Owner-only permission|
-|`domain-read`|Domain users can read the resource^|
-|`domain-write`|Domain users can read or write to the resource^|
+**Requirements**
 
-^ When domain permissions are set, the resource is discoverable through search.
+Enable the Google Drive API as described [here](https://developers.google.com/drive/api/v3/enable-drive-api).
+
+1. Go to the [Google API Console](https://console.developers.google.com/).
+2. Select a project.
+3. In the sidebar on the left, expand **APIs & auth** and select **APIs**.
+4. In the displayed list of available APIs, click the Drive API link and click **Enable API**.
+
 
 **Disclaimer**
 

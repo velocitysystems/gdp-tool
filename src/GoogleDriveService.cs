@@ -2,12 +2,12 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Google.Apis.Auth.OAuth2;
     using Google.Apis.Drive.v3;
+    using Google.Apis.Drive.v3.Data;
     using Google.Apis.Services;
     using Google.Apis.Util.Store;
 
@@ -79,7 +79,7 @@
         /// <param name="corpora">Optional scope identifier i.e. user, domain, drive, allDrives.</param>
         /// <param name="pageSize">Optional page size.</param>
         /// <returns>An <see cref="IAsyncEnumerable{T}" /> where each iterator returns a page of files/folders.</returns>
-        public async IAsyncEnumerable<IReadOnlyList<Google.Apis.Drive.v3.Data.File>> GetFilesAsync(
+        public async IAsyncEnumerable<IReadOnlyList<File>> GetFilesAsync(
             string query = null,
             string fields = "nextPageToken, files(id, name, mimeType, permissions)", 
             string spaces = "drive", 
@@ -91,7 +91,7 @@
                 throw new ArgumentException("Must contain the 'nextPageToken' descriptor.", nameof(fields));
             }
 
-            Google.Apis.Drive.v3.Data.FileList result = null;
+            FileList result = null;
             while (true)
             {
                 if (result != null && string.IsNullOrWhiteSpace(result.NextPageToken))
@@ -114,23 +114,34 @@
         }
 
         /// <summary>
+        /// Asynchronously get the permission.
+        /// </summary>
+        /// <param name="fileId">The file identifier.</param>
+        /// <param name="permissionId">The permission identifier.</param>
+        /// <param name="fields">Optional fields to include.</param>
+        /// <returns>A <see cref="Permission" />.</returns>
+        public async Task<Permission> GetPermissionAsync(
+            string fileId, 
+            string permissionId, 
+            string fields = "id, role, type, displayName, expirationTime")
+        {
+            var getRequest = _service.Permissions.Get(fileId, permissionId);
+            getRequest.Fields = fields;
+
+            var permission = await getRequest.ExecuteAsync();
+            return permission;
+        }
+
+        /// <summary>
         /// Asynchronously delete the permission.
         /// </summary>
         /// <param name="fileId">The file identifier.</param>
         /// <param name="permissionId">The permission identifier.</param>
-        /// <returns>True if the permission was deleted, else false.</returns>
-        public async Task<bool> DeletePermissionAsync(string fileId, string permissionId)
+        /// <returns>A task.</returns>
+        public async Task DeletePermissionAsync(string fileId, string permissionId)
         {
-            try
-            {
-                var deleteRequest = _service.Permissions.Delete(fileId, permissionId);
-                await deleteRequest.ExecuteAsync();
-                return true;
-            }
-            catch
-            {
-                throw;
-            }
+            var deleteRequest = _service.Permissions.Delete(fileId, permissionId);
+            await deleteRequest.ExecuteAsync();
         }
 
         #endregion
@@ -144,7 +155,7 @@
         /// <returns>A <see cref="UserCredential" />.</returns>
         private static async Task<UserCredential> GetUserCredentialAsync(string credentialsPath)
         {
-            using var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read);
+            using var stream = new System.IO.FileStream(credentialsPath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
 
             // The file token.json stores the user's access and refresh tokens, and is created
             // automatically when the authorization flow completes for the first time.
