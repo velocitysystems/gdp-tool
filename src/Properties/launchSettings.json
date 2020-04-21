@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "GdpTool": {
-      "commandName": "Project",
-      "commandLineArgs": "-c \"C:\\Development\\Projects\\credentials.json\" -r"
-    }
-  }
-}

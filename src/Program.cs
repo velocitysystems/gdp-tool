@@ -30,11 +30,18 @@
         /// <param name="args">The command-line arguments.</param>
         static async Task Main(string[] args)
         {
-            var getParserOptions = new TaskCompletionSource<Options>();
+            var getParserOptions = new TaskCompletionSource<(bool Parsed, Options Options)>();
 
-            Parser.Default.ParseArguments<Options>(args).WithParsed(options => getParserOptions.TrySetResult(options));
+            Parser.Default.ParseArguments<Options>(args)
+                .WithParsed(options => getParserOptions.TrySetResult((true, options)))
+                .WithNotParsed(options => getParserOptions.TrySetResult((false, default)));
 
-            var options = await getParserOptions.Task;
+            var result = await getParserOptions.Task;
+            if (!result.Parsed)
+            {
+                return;
+            }
+
             var logger = new LoggerConfiguration()
                 .WriteTo.Console()
                 .WriteTo.File("audit.log", rollingInterval: RollingInterval.Day)
@@ -42,7 +49,7 @@
 
             try
             {
-                await new ProgramService(options, logger).RunAsync();
+                await new ProgramService(result.Options, logger).RunAsync();
             }
             catch (Exception ex)
             {
